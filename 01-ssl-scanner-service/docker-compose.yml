@@ -1,0 +1,29 @@
+services:
+  database:
+    image: redis:alpine
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app-scanner:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    environment:
+      - REDIS_HOST=database
+      - DOMAINS=google.com,github.com,yandex.ru
+      - REDIS_PORT=6379
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - backend
+    restart: on-failure
+
+networks:
+  backend:
+    driver: bridge

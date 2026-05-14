@@ -1,0 +1,13 @@
+# Docker
+.dockerbin/
+*.tar
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+
+# OS
+.DS_Store

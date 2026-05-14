@@ -1,0 +1,46 @@
+name: DevSecOps Full Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-secure:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the code
+      uses: actions/checkout@v4
+
+    - name: Run Hadolint
+      uses: hadolint/hadolint-action@v3.1.0
+      with:
+        dockerfile: ./01-ssl-scanner-service/app/Dockerfile
+
+    - name: Run Bandit
+      run: |
+        pip install bandit
+        bandit -r ./01-ssl-scanner-service/app/ -ll
+
+    - name: Run Gitleaks
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        args: detect --source . --verbose
+
+    - name: Build Docker image
+      run: |
+        docker build -t ssl-scanner:latest ./01-ssl-scanner-service/app
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'ssl-scanner:latest'
+        format: 'table'
+        exit-code: '1'
+        ignore-unfixed: true
+        severity: 'CRITICAL,HIGH'
+        

@@ -1,8 +1,11 @@
 # 🛡️ DevOps & Security Hands-on Labs
 
-![Build & Security Scan](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/actions/workflows/docker-build.yml/badge.svg)
+[![DevSecOps Full Pipeline](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/actions/workflows/devsecops-pipeline.yml/badge.svg)](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/actions/workflows/devsecops-pipeline.yml)
 ![Python Version](https://img.shields.io/badge/python-3.11-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
+![Docker](https://img.shields.io/badge/Docker-Enabled-blue?logo=docker)
+![Security](https://img.shields.io/badge/Security-Hardened-orange?logo=guardant)
+![Gitleaks](https://img.shields.io/badge/Secrets-Protected-green?logo=git)
 
 ## 📌 Project Overview
 This repository is a dedicated laboratory for my transition into **DevSecOps Engineering**. It documents my practical journey from a **SOC Analyst** (completing Yandex Practicum in June 2026) to a Junior DevOps professional by September 2026. 
@@ -13,98 +16,139 @@ The core mission is to build security tools that aren't just functional, but **h
 
 ### [Lab 01: Container Security & Microservices](./01-ssl-scanner-service)
 **Goal:** Production-ready SSL/TLS Scanner with advanced container hardening.
-* **Tech:** Python 3.11, Docker (Multi-stage), Redis, Trivy.
-* **Key Achievement:** Implemented a **Shift-Left** security pipeline with automated CVE mitigation and non-root execution.
+* **Tech:** Python 3.11, Docker (Multi-stage), Redis, **Gitleaks**, **Bandit**, **Hadolint**, **Trivy**.
+* **Key Achievement:** : Implemented a multi-layered security gate and network isolation for backend services.
 
 ### [Lab 02: Linux Infrastructure Hardening](./02-infrastructure-hardening)
-**Goal:** Automated security baseline for cloud/on-premise Linux instances.
-* **Tech:** Bash, OpenSSH, UFW, Fail2Ban.
-* **Key Achievement:** Created an idempotent script that enforces a "Default Deny" network posture and disables insecure authentication methods.
+**Goal:** Automated security baseline for Linux instances
+* **Tech:** Bash, OpenSSH, UFW, Auditd.
+* **Key Achievement:** Created an idempotent hardening script that survives "minimal-OS" environments and enforces strict auditing.
 
 ---
 ## 🛡️ Detailed Lab Logs
 
 ### 🐍 Lab 01: Container Security — Hardened Microservice Architecture
-**Focus:** Supply Chain Security and Runtime Isolation.
+**Focus:** Shift-Left Security & Infrastructure as Code.
 
-* **Multi-Stage Build Strategy:** Leveraged a two-stage Dockerfile (`builder` vs `final`). This drastically reduces the attack surface by ensuring that build-time dependencies and compilers never reach production.
-* **Principle of Least Privilege (PoLP):** Implemented a non-root execution model. The application runs under a dedicated `appuser` (UID 1000), mitigating "container escape" risks.
-* **Software Composition Analysis (SCA):** Integrated **Trivy** into the CI/CD pipeline to enforce a **Zero-Vulnerability Policy**. The build fails automatically if any `HIGH` or `CRITICAL` CVEs are detected.
-* **Microservices Orchestration:** Resilient environment using **Docker Compose** with integrated **Healthchecks** and private bridge networking for database isolation.
+* **Secrets Detection (Gitleaks)** Integrated Gitleaks to prevent API tokens and SSH keys from ever entering the git history. Verified by bypassing and then hardening GitHub Push Protection.
+### 1. Static Analysis (SAST) & Linting
+* **Bandit (Python SAST):**
+    * **Purpose:** Automatically scans Python source code for common security issues (e.g., hardcoded passwords, insecure SSL/TLS versions).
+    * **Action:** Integrated into the CI/CD pipeline to block builds if `MEDIUM` or `HIGH` severity vulnerabilities are detected.
+* **Hadolint (Dockerfile Linter):**
+    * **Purpose:** Validates `Dockerfile` against best practices (e.g., preventing `root` execution, ensuring image version pinning).
+    * **Action:** Enforces a clean and minimal container structure, reducing the potential attack surface.
+* **Gitleaks (Secret Scanning):**
+    * **Purpose:** Scans the entire commit history for accidentally committed secrets (API keys, tokens, private keys).
+    * **Action:** Acts as a "Pre-push" gatekeeper, ensuring that sensitive data never reaches the remote repository.
+* **Advanced Networking:**
+    * Implemented **Internal Bridge Networking** in Docker Compose.
+    * The Redis database is completely isolated (no public ports) and accessible only by the scanner via a secure **Service Discovery** link.
+* **Configuration Decoupling:**
+    * Moved target data from environment variables to a dedicated `domains.txt` file.
+    * The file is mounted via **Read-Only Volumes**, following the "Data vs Code" separation principle.
 
 
-### 🐧 Lab 02: Infrastructure Hardening — Automated OS Security
+### 🐧 Lab 02: Infrastructure Hardening — "Minimal & Resilient"
 **Focus:** Reducing the attack surface of a fresh Linux installation.
 
-* **Automated Hardening:** Scripted configuration of `sshd_config` to eliminate brute-force vectors (custom port, disabling passwords).
-* **Network Segregation:** Implementing **UFW** with a "Default Deny" policy, opening only essential ports (2222, 80, 443).
+* **Environment Resilience:** The script was refactored to work on minimal server installations (even where `nano` or `sudo` might be missing).
+* **System Auditing:** Integrated **Auditd** with custom rules to monitor changes in sensitive files (`/etc/shadow`, `sshd_config`).
 * **Active Defense:** Deployment of **Fail2Ban** to automatically jail IP addresses exhibiting malicious behavior.
-* **Identity Management:** Automated creation of a dedicated `sudo` user with SSH-key-only access, following the **Principle of Least Privilege**.
-
+* **Non-Interactive Updates:** Optimized for automated deployment using `DEBIAN_FRONTEND=noninteractive`
 
 ---
-## 🛠️ System Architecture & Security Controls
-
-The project follows a **microservices pattern** orchestrated via Docker Compose.
-
-| Layer | Component | Security Control |
-| :--- | :--- | :--- |
-| **Compute** | Python 3.11 Scanner | Runtime isolation, Non-root (UID 1000) |
-| **Storage** | Redis (Stateful) | Isolated bridge network, No host port binding |
-| **Pipeline** | GitHub Actions | Automated SAST/SCA via Trivy |
-| **Network** | Docker Bridge | Strict service-to-service communication only |
-
 ## 🛡️ DevSecOps Pipeline (CI/CD)
-The project utilizes **GitHub Actions** to implement a "Shift Left" security strategy. Every commit is subjected to an automated security audit before it can be considered production-ready.
+The project utilizes GitHub Actions to implement a "Stop-the-World" policy. A build only succeeds if it passes all 4 security gates:
+1. **Linting** (Hadolint)
+2. **SAST** (Bandit)
+3. **Secrets** (Gitleaks)
+4. **SCA** (Trivy)
 
-### The Build Gate (`docker-build.yml`)
-The pipeline implements a "Stop-the-World" policy:
-1. **Static Analysis:** (Coming soon) Bandit for Python SAST.
-2. **Container Scanning:** **Trivy** scans the image for OS and Library vulnerabilities.
-3. **Severity Gate:** The build **fails automatically** if any `HIGH` or `CRITICAL` vulnerabilities are detected.
-
-```yaml
-- name: Run Trivy vulnerability scanner
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: 'ssl-scanner:multi'
-    severity: 'CRITICAL,HIGH'
-    exit-code: '1'
+### Pipeline Security Gate Example (YAML):
 ```
+- name: Run Gitleaks
+  uses: gitleaks/gitleaks-action@v2
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+- name: Security Scan (Bandit)
+  run: bandit -r ./app -f txt
+```
+
+## 🛠️ System Architecture & Security Controls
+| Layer    | Component           | Security Control                                      |
+|----------|---------------------|-------------------------------------------------------|
+| Compute  | Python 3.11 Scanner | Runtime isolation, Non-root (UID 1000), Resource Limits|
+| Storage  | Redis (Stateful)    | Internal Bridge Network, Auth (Password), No public ports|
+| Data     | domains.txt         | Configuration Decoupling, Read-Only Volume             |
+| Pipeline | GitHub Actions      | Automated SAST/SCA/Secret Detection                   |
 
 ## 🚀 Quick Start
 
 ### 🧪 Lab 01: Deploying the SSL Scanner
-To run the containerized scanner with Redis, you must create a folder, where you want to clone this repository. I created `test_folder` for easy understanding.
-```bash
-cd test_folder
-git clone https://github.com/cbrkrtek/DevOps-security-hands-on-labs.git
-cd .\DevOps-security-hands-on-labs\01-ssl-scanner-service\
-docker-compose up --build -d
-# Check progress
-docker logs -f 01-ssl-scanner-service-app-scanner-1
+To run the containerized scanner with Redis, follow these steps:
+
+1. **Prepare Environment:**
+Create a local folder for the project and navigate into it.
 ```
-### 🐧 Lab 02: Hardening a Linux Server
-To secure a fresh Ubuntu/Debian instance, you must create a folder, where you want to clone this repository. I created `test_folder` for easy understanding. 
+mkdir test_folder && cd test_folder
+```
+Then clone the repository and move to the service directory.
+```
+git clone [https://github.com/cbrkrtek/DevOps-security-hands-on-labs.git]
+cd DevOps-security-hands-on-labs/01-ssl-scanner-service/
+```
+**Configure secrets:** create a `.env` file to store your database password (this file is ignored by Git for security).
 ```bash
-cd test_folder
-git clone https://github.com/cbrkrtek/DevOps-security-hands-on-labs.git
-cd .\DevOps-security-hands-on-labs\02-infrastructure-hardering\
+echo "REDIS_PASSWORD=YOUR_PASSWORD" > .env
+```
+**Launch:**
+Start the hardened infrastructure in detached mode.
+```
+docker-compose up --build -d
+```
+**Monitor:**
+Verify the scanner is working and communicating with the isolated Redis.
+```
+docker-compose logs -f app-scanner
+```
+
+### 🐧 Lab 02: Hardening a Linux Server
+To secure a fresh Ubuntu/Debian instance using the automated security baseline:
+**Clone the Tools:**
+```
+git clone [https://github.com/cbrkrtek/DevOps-security-hands-on-labs.git]
+cd DevOps-security-hands-on-labs/02-infrastructure-hardening/
+```
+**Execute Hardering:**
+Make the script executable and run it with sudo privileges.
+
+```
 chmod +x setup.sh
 sudo ./setup.sh
 ```
-
+*Note: The script will update the system, rotate the SSH port to 2222, disable password authentication, and configure UFW/Auditd.*
 ## 🚀 2026 Roadmap (September Readiness)
-As per my Technical Learning Plan:
-* **[June] Infrastructure as Code & Cloud Hardening:**
-	* Deploying hardened instances via Terraform & Ansible.
-	* **Cloud IAM & VPC Design:** Implementing private networking and strict access policies.
-	* **Secret Management:** Integration with Cloud Secret Manager or HashiCorp Vault.
-* **[July] Kubernetes Hardening:** Implementing Network Policies and Admission Controllers (Kyverno/OPA).
-	* Managed K8s (EKS/AKS/YC Managed Service) security settings.
-	* Admission Controllers & Cloud Registry Scanning.
-* **[August] Runtime Security:**
-	* Falco for threat detection.
-	* **Cloud SIEM Integration:** Collecting logs from infrastructure into a central dashboard.
+
+As per my Technical Learning Plan, the journey continues toward full-stack DevSecOps proficiency:
+
+* 📅 [June] Infrastructure as Code (IaC) & AWS Cloud Hardening:
+    * Automated Provisioning: Deploying hardened Amazon Linux 2023 instances via Terraform & Ansible.
+    * Cloud Architecture: Designing secure AWS VPCs with private subnets, NAT Gateways, and strict Security Groups.
+    * Identity & Access: Implementing the Principle of Least Privilege using AWS IAM Roles and Policies.
+    * Secret Management: Transitioning from local .env files to AWS Secrets Manager.
+
+* 📅 [July] Container Orchestration & Kubernetes Security (EKS):
+    * Managed K8s: Deploying and hardening Amazon EKS clusters.
+    * Network Policies: Implementing pod-to-pod isolation and EKS security best practices.
+    * Policy as Code: Enforcing security standards with Kyverno or OPA/Gatekeeper.
+
+* 📅 [August] Runtime Security & Observability:
+    * Threat Detection: Monitoring system calls and anomalous behavior with Falco.
+    * Cloud SIEM: Centralizing logs and security events using AWS CloudWatch and OpenSearch/Grafana.
+
+---
+
 ## ⚖️ License
-Licensed under the **MIT License.**
+Licensed under the MIT License.

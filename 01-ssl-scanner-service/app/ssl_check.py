@@ -4,6 +4,8 @@ import os
 import logging
 import redis
 from datetime import datetime
+
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
@@ -11,7 +13,20 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 REDIS_HOST = os.getenv("REDIS_HOST", "database")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-def get_ssl_expiry(hostname):
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+DOMAINS_FILE = "domains.txt"
+def get_domains_from_file(): #read domains from text file
+    if not os.path.exists(DOMAINS_FILE):
+        logger.warning(f"File {DOMAINS_FILE} not found. Using defaults.")
+        return ["google.com", "github.com"]
+    try:
+        with open(DOMAINS_FILE, 'r') as f:
+            domains = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+            return domains
+    except Exception as e:
+        logger.error(f"Error reading {DOMAINS_FILE}: {e}")
+        return []
+def get_ssl_expiry(hostname): # check ssl certificate
     context = ssl.create_default_context()
     try:
         with socket.create_connection((hostname, 443), timeout=5) as sock:
@@ -23,27 +38,33 @@ def get_ssl_expiry(hostname):
         logger.error(f"Failed to check {hostname}: {e}")
         return None
 def main():
+    target_domains = get_domains_from_file()
+    if not target_domains:
+        logger.error("No domains to check. Exiting.")
+        return
     try:
-        r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+        r = redis.Redis(
+            host=REDIS_HOST, 
+            port=REDIS_PORT, 
+            password=REDIS_PASSWORD, 
+            decode_responses=True
+        )
         r.ping()
     except Exception as e:
         logger.error(f"Could not connect to Redis: {e}")
         return
-    domains_env = os.getenv("DOMAINS") or "google.com,github.com"
-    target_domains = domains_env.split(",")
-    logger.info("Starting SSL Expiration Check...")
+    logger.info(f"Starting SSL Check for {len(target_domains)} domains...")
     for domain in target_domains:
-        domain = domain.strip()
         expiry = get_ssl_expiry(domain)
         if expiry:
             days_left = (expiry - datetime.now()).days
-            #save to Redis
+            # save to redis
             key = f"ssl_check:{domain}"
             r.set(key, days_left)
             r.expire(key, 86400)
             if days_left < 14:
                 logger.warning(f"CRITICAL: {domain} expires in {days_left} days!")
             else:
-                logger.info(f"OK: {domain} has {days_left} days remaining. Saved to Redis.")
+                logger.info(f"OK: {domain} ({days_left} days remaining).")
 if __name__ == "__main__":
     main()

@@ -2,7 +2,7 @@ name: Enterprise Security Gate
 
 on:
   push:
-    branches: [ '*' ] 
+    branches: [ main ] 
   pull_request:
     branches: [ main ]
 
@@ -19,7 +19,7 @@ jobs:
       
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
-        
+
   job_lint_docker:
     name: Hadolint (Docker Lint)
     runs-on: ubuntu-latest

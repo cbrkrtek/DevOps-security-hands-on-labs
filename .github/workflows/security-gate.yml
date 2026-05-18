@@ -2,7 +2,7 @@ name: Enterprise Security Gate
 
 on:
   push:
-    branches: [ main ] 
+    branches: [ feature/enterprise-pipeline ] 
   pull_request:
     branches: [ main ]
 

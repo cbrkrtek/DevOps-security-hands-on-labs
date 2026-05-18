@@ -1,0 +1,33 @@
+name: Enterprise Security Gate
+
+on:
+  push:
+    branches: [ '*' ] 
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  job_lint_bash:
+    name: ShellCheck (Bash Lint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+
+  job_lint_docker:
+    name: Hadolint (Docker Lint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: 01-ssl-scanner-service/app/Dockerfile

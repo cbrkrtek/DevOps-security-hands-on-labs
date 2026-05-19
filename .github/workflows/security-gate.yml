@@ -60,4 +60,4 @@ jobs:
         run: pip install ansible-lint
 
       - name: Run Ansible-Lint
-        run: ansible-lint 03-observability-management/ansible/hardening.yml
+        run: ansible-lint 03-observability-management/ansible/hardering.yml

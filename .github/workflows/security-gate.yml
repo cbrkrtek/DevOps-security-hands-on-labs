@@ -1,14 +1,11 @@
 name: Enterprise Security Gate
-
 on:
   push:
     branches: [ feature/enterprise-pipeline ] 
   pull_request:
     branches: [ main ]
-
 permissions:
   contents: read
-
 jobs:
   job_lint_bash:
     name: ShellCheck (Bash Lint)
@@ -56,8 +53,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install Ansible Lint
-        run: pip install ansible-lint
-
+      - name: Install Ansible Lint and Dependencies
+        run: |
+          pip install ansible-lint
+          ansible-galaxy collection install community.general
       - name: Run Ansible-Lint
         run: ansible-lint 03-observability-management/ansible/hardering.yml

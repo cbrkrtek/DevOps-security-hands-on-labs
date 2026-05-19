@@ -1,0 +1,38 @@
+---
+- name: Infrastructure Hardening Baseline
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Ensure apt cache is updated
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install security auditing tools (Auditd & UFW)
+      ansible.builtin.apt:
+        name:
+          - ufw
+          - auditd
+        state: present
+
+    - name: Set default firewall policy to deny incoming
+      community.general.ufw:
+        direction: incoming
+        policy: deny
+
+    - name: Allow SSH traffic
+      community.general.ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
+
+    - name: Enable UFW firewall
+      community.general.ufw:
+        state: enabled
+
+    - name: Ensure Auditd service is running and enabled
+      ansible.builtin.systemd:
+        name: auditd
+        state: started
+        enabled: yes

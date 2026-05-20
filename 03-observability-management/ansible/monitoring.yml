@@ -20,3 +20,27 @@
       ansible.builtin.wait_for:
         port: 9100
         timeout: 10
+    - name: Ensure Prometheus is installed
+      ansible.builtin.apt:
+        name: prometheus
+        state: present
+
+    - name: Configure Prometheus to scrape Node Exporter
+      ansible.builtin.copy:
+        dest: /etc/prometheus/prometheus.yml
+        content: |
+          global:
+            scrape_interval: 15s
+          scrape_configs:
+            - job_name: 'webservers'
+              static_configs:
+                - targets: ['localhost:9100']
+        mode: '0644'
+      notify: Restart Prometheus
+
+  handlers:
+    - name: Restart Prometheus
+      ansible.builtin.systemd:
+        name: prometheus
+        state: restarted
+        

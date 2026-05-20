@@ -20,6 +20,7 @@
       ansible.builtin.wait_for:
         port: 9100
         timeout: 10
+
     - name: Ensure Prometheus is installed
       ansible.builtin.apt:
         name: prometheus
@@ -38,9 +39,20 @@
         mode: '0644'
       notify: Restart Prometheus
 
+    - name: Ensure Grafana is installed
+      ansible.builtin.apt:
+        name: grafana
+        state: present
+        update_cache: true
+
+    - name: Ensure Grafana service is started and enabled
+      ansible.builtin.systemd:
+        name: grafana-server
+        state: started
+        enabled: true
+
   handlers:
     - name: Restart Prometheus
       ansible.builtin.systemd:
         name: prometheus
         state: restarted
-        

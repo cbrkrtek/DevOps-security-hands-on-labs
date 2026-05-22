@@ -41,14 +41,14 @@
       ansible.builtin.unarchive:
         src: "/tmp/prometheus.tar.gz"
         dest: "/tmp"
-        remote_src: yes
+        remote_src: true
 
     - name: Copy Prometheus binaries to /usr/local/bin
       ansible.builtin.copy:
         src: "/tmp/prometheus-2.53.3.linux-amd64/{{ item }}"
         dest: "/usr/local/bin/{{ item }}"
         mode: '0755'
-        remote_src: yes
+        remote_src: true
       loop:
         - prometheus
         - promtool
@@ -87,7 +87,7 @@
         name: prometheus
         state: started
         enabled: true
-        daemon_reload: yes
+        daemon_reload: true
 
     - name: Download Grafana deb package directly
       ansible.builtin.get_url:

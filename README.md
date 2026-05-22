@@ -24,6 +24,11 @@ The core mission is to build security tools that aren't just functional, but **h
 * **Tech:** Bash, OpenSSH, UFW, Auditd.
 * **Key Achievement:** Created an idempotent hardening script that survives "minimal-OS" environments and enforces strict auditing.
 
+### [Lab 03: Infrastructure Observability & Monitoring](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/tree/feature/enterprise-pipeline/03-observability-management)
+**Goal:** Centralized real-time performance and security monitoring automated via Ansible and isolated via Docker.
+* **Tech:** Ansible, Prometheus, Grafana, Docker Compose, Node Exporter, YAML.
+* **Key Achievement:** Authored an idempotent Ansible playbook for hands-free target system telemetry prep; combined it with a local cross-platform Docker Compose monitoring stack to seamlessly bypass network/ISP routing restrictions.
+
 ---
 ## 🛡️ Detailed Lab Logs
 
@@ -57,6 +62,15 @@ The core mission is to build security tools that aren't just functional, but **h
 * **Active Defense:** Deployment of **Fail2Ban** to automatically jail IP addresses exhibiting malicious behavior.
 * **Non-Interactive Updates:** Optimized for automated deployment using `DEBIAN_FRONTEND=noninteractive`
 
+### 📊 Lab 03: Infrastructure Observability — Hybrid & Automated Monitoring
+**Focus:** Infrastructure Visibility, Telemetry, and Infrastructure as Code (IaC).
+
+* **Ansible Automation (Target Prep):**
+    * Developed an automated, idempotent Ansible playbook (`monitoring.yml`) to provision the target environment. It configures prerequisites, installs `prometheus-node-exporter`, and ensures the telemetry service is securely enabled and running under systemd.
+* **Hybrid Core Architecture:**
+    * Implemented a multi-host monitoring pipeline. While the target Linux server is managed and prepared via Ansible inside VirtualBox, the aggregation (Prometheus) and visualization (Grafana) layers run in isolated Docker containers on the host machine to overcome nested network blocks.
+* **Grafana Dashboard-as-Code:**
+    * Designed a comprehensive local security dashboard to track CPU, Memory, and Network traffic in real-time. Created a static `dashboard.json` blueprint following GitOps principles for instant, reproducible visualization.
 ---
 ## 🛡️ DevSecOps Pipeline (CI/CD)
 The project utilizes GitHub Actions to implement a "Stop-the-World" policy. A build only succeeds if it passes all 4 security gates:
@@ -128,7 +142,25 @@ Make the script executable and run it with sudo privileges.
 chmod +x setup.sh
 sudo ./setup.sh
 ```
-*Note: The script will update the system, rotate the SSH port to 2222, disable password authentication, and configure UFW/Auditd.*
+
+### 📊 Lab 03: Deploying Local Observability Stack
+This lab contains a dual-layer setup: an **Ansible Playbook** for target configuration and a **Docker Compose Stack** for local visualization.
+1. **Move to the project folder:**
+   ```bash
+   cd DevOps-security-hands-on-labs/03-observability-management/
+   ```
+2. **The Ansible Playbook Layer:**
+   The `monitoring.yml` playbook is stored in the repository to automate Node Exporter provisioning on the managed webservers group.
+
+3. **Launch the Docker Containers:**
+   Start the pre-configured Prometheus and Grafana stack on your host machine:
+   ```bash
+   docker compose up -d
+   ```
+4. **Access UI & Import Dashboard:**
+* **Prometheus:** `http://localhost:9090` (Verify target `192.168.0.112:9100` is UP)
+* **Grafana:** `http://localhost:3000` (Credentials: `admin` / `admin`)
+* Import `dashboard.json` via Grafana UI to view live charts.
 ## 🚀 2026 Roadmap (September Readiness)
 
 As per my Technical Learning Plan, the journey continues toward full-stack DevSecOps proficiency:

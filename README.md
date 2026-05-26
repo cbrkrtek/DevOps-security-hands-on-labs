@@ -29,6 +29,11 @@ The core mission is to build security tools that aren't just functional, but **h
 * **Tech:** Ansible, Prometheus, Grafana, Docker Compose, Node Exporter, YAML.
 * **Key Achievement:** Authored an idempotent Ansible playbook for hands-free target system telemetry prep; combined it with a local cross-platform Docker Compose monitoring stack to seamlessly bypass network/ISP routing restrictions.
 
+### [Lab 04: Centralized Log Aggregation & Security Observability (Loki/Promtail)](./04-observability-loki-promtail)
+**Goal:** Centralized threat and audit log monitoring with real-time anomaly visualization.
+* **Tech:** Grafana Loki, Promtail, LogQL, Nginx, Linux Audit/Auth Logs.
+* **Key Achievement:** Resolved single-node replication locks (`replication_factor: 1`) to host a lightweight local Loki instance; built an observability dashboard capturing live SSH brute-force and web-vulnerability scanning anomalies side-by-side with hardware metrics.
+
 ---
 ## 🛡️ Detailed Lab Logs
 
@@ -62,7 +67,7 @@ The core mission is to build security tools that aren't just functional, but **h
 * **Active Defense:** Deployment of **Fail2Ban** to automatically jail IP addresses exhibiting malicious behavior.
 * **Non-Interactive Updates:** Optimized for automated deployment using `DEBIAN_FRONTEND=noninteractive`
 
-### 📊 Lab 03: Infrastructure Observability — Hybrid & Automated Monitoring
+### 📊 Lab 03: Infrastructure Observability — Hybrid & Automated Monitoring (check in branch feature/enterprise-pipeline)
 **Focus:** Infrastructure Visibility, Telemetry, and Infrastructure as Code (IaC).
 
 * **Ansible Automation (Target Prep):**
@@ -71,6 +76,23 @@ The core mission is to build security tools that aren't just functional, but **h
     * Implemented a multi-host monitoring pipeline. While the target Linux server is managed and prepared via Ansible inside VirtualBox, the aggregation (Prometheus) and visualization (Grafana) layers run in isolated Docker containers on the host machine to overcome nested network blocks.
 * **Grafana Dashboard-as-Code:**
     * Designed a comprehensive local security dashboard to track CPU, Memory, and Network traffic in real-time. Created a static `dashboard.json` blueprint following GitOps principles for instant, reproducible visualization.
+
+### 🕵️‍♂️ Lab 04: Security Observability — Log Aggregation & Infrastructure Telemetry (check in branch feature/enterprise-pipeline)
+**Focus:** Log-as-Code, Single-Binary Storage Optimization, and Security Telemetry Visualization.
+
+* **Single-Binary Loki Optimization:**
+    * Overcame production-grade clustering restrictions in Docker by refactoring Loki (`loki-config.yaml`) into an optimized **Single-Binary mode** (`replication_factor: 1`, `store: inmemory`). This bypassed complex microservice ring dependencies, creating a high-performance local log aggregation engine.
+* **Log-as-Code & Promtail Pipeline:**
+    * Configured automated log shipping via Promtail. Handled private system logs (`/var/log/auth.log` and `/var/log/nginx/access.log`) by adjusting system daemon runtime privileges (`User=root` systemd verification).
+* **Telemetry Correlation Dashboard:**
+    * Designed an advanced observability Grafana dashboard integrating both metric and log engines. Created specific real-time panels for visual correlation during incidents:
+        * **Log Event Rate** via LogQL (`count_over_time({job="nginx"}[1m]) / 60`).
+        * **Network Traffic Volume** via PromQL (`rate(node_network_receive_bytes_total{device!="lo"}[1m])`).
+* **Active Security Simulation (Nmap/Brute-Force Testing):**
+    * Conducted live automated stress testing using `nmap --script=vuln` and `ssh-brute`. Successfully validated the monitoring pipeline by visually correlating hardware spikes (CPU climbing to 80%+) with an instantaneous flood of `404/400 HTTP` anomalies and `Failed password for invalid user` auth logs.
+
+![Result of the 4-th week](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/Monitoring%20logs%20and%20resources.PNG)
+
 ---
 ## 🛡️ DevSecOps Pipeline (CI/CD)
 The project utilizes GitHub Actions to implement a "Stop-the-World" policy. A build only succeeds if it passes all 4 security gates:

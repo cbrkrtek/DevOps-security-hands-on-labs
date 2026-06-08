@@ -34,7 +34,7 @@ resource "yandex_compute_instance" "ubuntu_vm" {
   }
 
   metadata = {
-    ssh-keys = "ubuntu:${file(pathexpand("~/.ssh/id_ed25519.pub"))}"    
+    ssh-keys = "ubuntu:${file(pathexpand("~/.ssh/id_ed25519.pub"))}" #here you need to paste your own public ssh key!!!   
     user-data = <<EOF
 #cloud-config
 datasource_list: [ NoCloud, ConfigDrive ]

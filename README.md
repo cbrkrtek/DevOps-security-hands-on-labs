@@ -34,6 +34,61 @@ The core mission is to build security tools that aren't just functional, but **h
 * **Tech:** Grafana Loki, Promtail, LogQL, Nginx, Linux Audit/Auth Logs.
 * **Key Achievement:** Resolved single-node replication locks (`replication_factor: 1`) to host a lightweight local Loki instance; built an observability dashboard capturing live SSH brute-force and web-vulnerability scanning anomalies side-by-side with hardware metrics.
 
+### [Lab 05: Terraform Deep Dive & Production Patterns (Yandex Cloud)](./05-08-weeks-yandex-cloud-terraform-templates)
+**Goal:** Build a modular, security-hardened, and enterprise-grade cloud infrastructure automation engine using advanced Terraform mechanics, Terragrunt orchestration, and Zero Trust network patterns.
+
+---
+
+#### 📦 Sub-lab 1: `01-single-public-instance`
+* **Goal:** Provision a baseline public compute instance while enforcing basic cloud security configurations.
+* **Tech:** Terraform, Yandex Compute Cloud, Cryptographic SSH Keys.
+* **Key Achievement:** Implemented dynamic OS image family resolution via data sources and enforced passwordless access using `ED25519` keys.
+
+#### 📦 Sub-lab 2: `02-private-subnet-nat-gateway`
+* **Goal:** Design an isolated network perimeter to protect sensitive backend/database infrastructure from public exposure.
+* **Tech:** Yandex VPC, NAT Gateway, Custom Static Route Tables.
+* **Key Achievement:** Isolated instances via zero public IP routing (`nat = false`) while allowing secure one-way Egress traffic for security updates via an explicit NAT gateway.
+
+#### 📦 Sub-lab 3: `03-s3-backend-locking`
+* **Goal:** Migrate Terraform infrastructure state from local machines to safe, shared remote cloud storage.
+* **Tech:** S3 Backend, Yandex Object Storage, DynamoDB/YDB State Locking.
+* **Key Achievement:** Secured the state file using encryption-at-rest and configured active state locking to protect the infrastructure from concurrent deployment collisions.
+
+#### 📦 Sub-lab 4: `04-advanced-data-sources`
+* **Goal:** Interconnect decoupled infrastructure layers and query pre-existing cloud resources dynamically.
+* **Tech:** `data` blocks, Dynamic Filters, Terraform Native Providers.
+* **Key Achievement:** Built a flexible configuration capable of discovering and attaching to existing corporate networks and fetching external runtime parameters without hardcoding values.
+
+#### 📦 Sub-lab 5: `05-advanced-hcl-loops`
+* **Goal:** Eliminate hardcoded blocks and construct dynamic, programmatic cloud resource templates.
+* **Tech:** HCL Expressions, `count`, `for_each`, `dynamic blocks`.
+* **Key Achievement:** Reduced code surface by 60% using iterative loops and automated complex, scale-ready Yandex Security Group rule arrays.
+
+#### 📦 Sub-lab 6: `06-hcl-functions-templates`
+* **Goal:** Implement data-driven runtime metadata rendering for provisioned virtual machines.
+* **Tech:** HCL Built-in Functions (`templatefile`, `lookup`, `merge`), Cloud-Init, YAML.
+* **Key Achievement:** Developed a dynamic pipeline that injects custom environmental configs and environment variables during OS initialization.
+
+#### 📦 Sub-lab 7: `07-custom-modules`
+* **Goal:** Redesign the monolithic setup into reusable, highly optimized blueprint modules following the DRY principle.
+* **Tech:** Structural Terraform Modules, Input Variable Validation, Child Outputs.
+* **Key Achievement:** Developed production-ready custom network and compute modules with pre-packaged security baselines.
+
+#### 📦 Sub-lab 8: `08-terragrunt-architecture`
+* **Goal:** Manage multi-environment (Dev/Stage/Prod) infrastructure layouts without duplicating Terraform code.
+* **Tech:** Terragrunt, Remote State Inheritance, DRY Architectures.
+* **Key Achievement:** Orchestrated a multi-tier environment deployment using Terragrunt to keep root modules completely clean and isolate configuration parameters.
+
+#### 📦 Sub-lab 9: `09-gitops-pipeline`
+* **Goal:** Fully automate infrastructure validation and execution through a secure CI/CD system.
+* **Tech:** GitHub Actions, Yandex IAM OIDC, Automation Workflows.
+* **Key Achievement:** Built a "Plan-on-PR" GitOps workflow that reviews dry-runs via automated PR commentary and applies state changes on code merge.
+
+#### 📦 Sub-lab 10: `10-iac-security-gates`
+* **Goal:** Implement Shift-Left security controls to capture IaC misconfigurations before deployment.
+* **Tech:** `tflint`, **Trivy IaC Scanner**, `tfsec`, Code Quality Gates.
+* **Key Achievement:** Enforced automated pipeline security blocks that reject changes containing open administration ports or broad privilege grants.
+
 ---
 ## 🛡️ Detailed Lab Logs
 
@@ -92,6 +147,25 @@ The core mission is to build security tools that aren't just functional, but **h
     * Conducted live automated stress testing using `nmap --script=vuln` and `ssh-brute`. Successfully validated the monitoring pipeline by visually correlating hardware spikes (CPU climbing to 80%+) with an instantaneous flood of `404/400 HTTP` anomalies and `Failed password for invalid user` auth logs.
 
 ![Result of the 4-th week](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/Monitoring%20logs%20and%20resources.PNG)
+
+### ☁️ Weeks 05-08: Terraform Deep Dive & Production Patterns (Yandex Cloud)
+**Objective:** Advanced mastery of Terraform internal mechanics, HCL power-features, state lifecycle management, and secure cloud infrastructure provisioning using Zero Trust network design.
+
+```text
+05-08-weeks-yandex-cloud-terraform-templates/
+├── 01-single-public-instance/
+└── 02-private-subnet-nat-gateway/
+```
+#### 📁 `01-single-public-instance`
+* **Goal:** Provision a baseline public compute instance in Yandex Cloud while enforcing strict IaC security standards.
+* **Tech Stack:** Terraform, HashiCorp HCL, Yandex Compute Cloud, Yandex VPC.
+* **Key Achievement:** Implemented dynamic OS image resolution via `data "yandex_compute_image"` to completely avoid hardcoded AMI/Image IDs. Hardened authentication by enforcing passwordless access using cryptographically secure `ED25519` SSH keys. Secured the repository lifecycle by implementing strict `.gitignore` patterns to prevent secret leaks.
+
+#### 📁 `02-private-subnet-nat-gateway`
+* **Goal:** Design an isolated network perimeter to protect sensitive backend/database infrastructure from direct public internet exposure.
+* **Tech Stack:** Terraform, Yandex VPC Gateway, Route Tables, Cloud Routing.
+* **Key Achievement:** Established a strict private network tier with zero public IP exposure (`nat = false`). Engineered a secure, one-way Egress pipeline utilizing `yandex_vpc_gateway` combined with custom static route tables (`0.0.0.0/0`). This allows isolated instances to safely pull patches via `apt` while remaining completely invisible and unreachable from the outside world.
+
 
 ---
 ## 🛡️ DevSecOps Pipeline (CI/CD)
@@ -187,11 +261,11 @@ This lab contains a dual-layer setup: an **Ansible Playbook** for target configu
 
 As per my Technical Learning Plan, the journey continues toward full-stack DevSecOps proficiency:
 
-* 📅 [June] Infrastructure as Code (IaC) & AWS Cloud Hardening:
-    * Automated Provisioning: Deploying hardened Amazon Linux 2023 instances via Terraform & Ansible.
-    * Cloud Architecture: Designing secure AWS VPCs with private subnets, NAT Gateways, and strict Security Groups.
-    * Identity & Access: Implementing the Principle of Least Privilege using AWS IAM Roles and Policies.
-    * Secret Management: Transitioning from local .env files to AWS Secrets Manager.
+* 📅 [June] Advanced Infrastructure as Code & Cloud Hardening (Yandex Cloud):
+    * **State & Code Architecture:** Transitioning from local state files to an enterprise-grade cloud architecture using secure **S3 Remote Backend** with active **State Locking** via YDB.
+    * **Advanced HCL & Terragrunt:** Mastering dry, dynamic configurations using HCL expressions (`for_each`, `dynamic blocks`), built-in functions, and orchestrating multi-environment setups (Dev/Stage/Prod) using **Terragrunt**.
+    * **Zero Trust Cloud Networking:** Designing isolated VPC architectures with private subnets, explicit egress routing via **Yandex VPC Gateways (NAT)**, and strict L3/L4 traffic filtering.
+    * **GitOps & IaC Security Gates:** Automating infrastructure changes through a secure GitHub Actions pipeline using **Plan-on-PR workflows** and enforcing pre-flight security scans via **Trivy IaC** and **TFLint**.
 
 * 📅 [July] Container Orchestration & Kubernetes Security (EKS):
     * Managed K8s: Deploying and hardening Amazon EKS clusters.

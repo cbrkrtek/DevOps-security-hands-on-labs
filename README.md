@@ -166,6 +166,10 @@ The core mission is to build security tools that aren't just functional, but **h
 * **Tech Stack:** Terraform, Yandex VPC Gateway, Route Tables, Cloud Routing.
 * **Key Achievement:** Established a strict private network tier with zero public IP exposure (`nat = false`). Engineered a secure, one-way Egress pipeline utilizing `yandex_vpc_gateway` combined with custom static route tables (`0.0.0.0/0`). This allows isolated instances to safely pull patches via `apt` while remaining completely invisible and unreachable from the outside world.
 
+#### 📁 `03-s3-backend-locking`
+* **Goal:** Architect a highly available, collaborative, and secure remote state management pipeline for Terraform with atomic state locking.
+* **Tech Stack:** Terraform, Yandex Object Storage (S3), Yandex Cloud IAM.
+* **Key Achievement:** Migrated the local Terraform state to a secure remote Yandex Object Storage bucket, eliminating the risk of unencrypted state file exposure. Enforced atomic state locking using native S3 lockfiles (`use_lockfile = true`) to prevent race conditions and concurrent state corruption during team execution. Hardened the provider authentication layer by shifting from fragile local environment variables to granular Service Account IAM keys (`key.json`), seamlessly isolating infrastructure logic from deployment-specific secrets via `.gitignore` and dynamic `.tfvars` parsing.
 
 ---
 ## 🛡️ DevSecOps Pipeline (CI/CD)

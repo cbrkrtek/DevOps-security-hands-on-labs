@@ -171,6 +171,11 @@ The core mission is to build security tools that aren't just functional, but **h
 * **Tech Stack:** Terraform, Yandex Object Storage (S3), Yandex Cloud IAM.
 * **Key Achievement:** Migrated the local Terraform state to a secure remote Yandex Object Storage bucket, eliminating the risk of unencrypted state file exposure. Enforced atomic state locking using native S3 lockfiles (`use_lockfile = true`) to prevent race conditions and concurrent state corruption during team execution. Hardened the provider authentication layer by shifting from fragile local environment variables to granular Service Account IAM keys (`key.json`), seamlessly isolating infrastructure logic from deployment-specific secrets via `.gitignore` and dynamic `.tfvars` parsing.
 
+#### 📁 `04-alb-security-groups`
+* **Goal:** Architect a highly available, multi-zone application delivery network secured by infrastructure-level firewall perimeters.
+* **Tech Stack:** Terraform, Yandex Application Load Balancer (ALB), Yandex VPC Security Groups, L7 Routing.
+* **Key Achievement:** Designed and deployed a resilient, multi-zone network architecture from scratch (greenfield deployment). Engineered an enterprise-grade L7 Application Load Balancer topology across independent availability zones (`ru-central1-a` and `ru-central1-b`) featuring dedicated target groups, HTTP routers, and automated active healthchecks (`http_healthcheck`). Enforced zero-trust network isolation by wrapping the load balancer in strict, stateful VPC Security Groups (`yandex_vpc_security_group`), restricting public ingress solely to HTTP port 80 and ensuring granular internal communication filters based on the principle of least privilege.
+
 ---
 ## 🛡️ DevSecOps Pipeline (CI/CD)
 The project utilizes GitHub Actions to implement a "Stop-the-World" policy. A build only succeeds if it passes all 4 security gates:

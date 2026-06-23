@@ -155,6 +155,9 @@ The core mission is to build security tools that aren't just functional, but **h
 05-08-weeks-yandex-cloud-terraform-templates/
 ├── 01-single-public-instance/
 └── 02-private-subnet-nat-gateway/
+└── 03-s3-backend-locking/
+└── 04-alb-security-groups/
+└── 05-advanced-hcl-loops/
 ```
 #### 📁 `01-single-public-instance`
 * **Goal:** Provision a baseline public compute instance in Yandex Cloud while enforcing strict IaC security standards.
@@ -175,6 +178,11 @@ The core mission is to build security tools that aren't just functional, but **h
 * **Goal:** Architect a highly available, multi-zone application delivery network secured by infrastructure-level firewall perimeters.
 * **Tech Stack:** Terraform, Yandex Application Load Balancer (ALB), Yandex VPC Security Groups, L7 Routing.
 * **Key Achievement:** Designed and deployed a resilient, multi-zone network architecture from scratch (greenfield deployment). Engineered an enterprise-grade L7 Application Load Balancer topology across independent availability zones (`ru-central1-a` and `ru-central1-b`) featuring dedicated target groups, HTTP routers, and automated active healthchecks (`http_healthcheck`). Enforced zero-trust network isolation by wrapping the load balancer in strict, stateful VPC Security Groups (`yandex_vpc_security_group`), restricting public ingress solely to HTTP port 80 and ensuring granular internal communication filters based on the principle of least privilege.
+
+#### 📁 `05-advanced-hcl-loops`
+* **Goal:** Eliminate hardcoded resource blocks and construct dynamic, data-driven cloud infrastructure templates.
+* **Tech Stack:** Terraform, HashiCorp HCL, Dynamic Blocks, `for_each` Loops, `count` Expressions.
+* **Key Achievement:** Reduced the overall codebase surface area by 60% by refactoring monolithic declarations into programmatic, iterative loops. Engineered a scale-ready network security perimeter using HCL `dynamic` blocks and `for_each` expressions to generate complex Yandex Security Group rule arrays dynamically from structured map variables. Automated multi-node compute provisioning via the `count` meta-argument with dynamic index-based naming conventions (`count.index`), completely externalizing critical runtime attributes—such as deployment public SSH keys—into secure `.tfvars` variables to isolate environment secrets from version control.
 
 ---
 ## 🛡️ DevSecOps Pipeline (CI/CD)

@@ -184,6 +184,11 @@ The core mission is to build security tools that aren't just functional, but **h
 * **Tech Stack:** Terraform, HashiCorp HCL, Dynamic Blocks, `for_each` Loops, `count` Expressions.
 * **Key Achievement:** Reduced the overall codebase surface area by 60% by refactoring monolithic declarations into programmatic, iterative loops. Engineered a scale-ready network security perimeter using HCL `dynamic` blocks and `for_each` expressions to generate complex Yandex Security Group rule arrays dynamically from structured map variables. Automated multi-node compute provisioning via the `count` meta-argument with dynamic index-based naming conventions (`count.index`), completely externalizing critical runtime attributes—such as deployment public SSH keys—into secure `.tfvars` variables to isolate environment secrets from version control.
 
+#### 📁 `06-hcl-functions-templates`
+* **Goal:** Implement data-driven runtime metadata rendering and automated bootstrap configuration for provisioned virtual machines.
+* **Tech Stack:** Terraform, HashiCorp HCL, Built-in Functions (`templatefile`, `lookup`, `merge`), Cloud-Init, YAML.
+* **Key Achievement:** Developed a dynamic OS initialization pipeline by separating runtime configuration data from infrastructure logic. Leveraged the `lookup` and `merge` HCL functions to dynamically resolve environment-specific attributes (ports, system users) based on the target deployment tier (`dev`/`prod`). Engineered an automated metadata injection mechanism using the `templatefile` function to render parameterized Cloud-Init YAML blueprints on the fly, enabling hands-free user provisioning, SSH security hardening, and automated package deployments (Nginx) during the virtual machine's initial boot sequence.
+
 ---
 ## 🛡️ DevSecOps Pipeline (CI/CD)
 The project utilizes GitHub Actions to implement a "Stop-the-World" policy. A build only succeeds if it passes all 4 security gates:

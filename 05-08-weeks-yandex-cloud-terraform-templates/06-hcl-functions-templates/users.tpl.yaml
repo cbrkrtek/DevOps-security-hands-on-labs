@@ -1,0 +1,21 @@
+#cloud-config
+users:
+  - name: ${username}
+    groups: sudo
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh_authorized_keys:
+      - ${ssh_key}
+
+write_files:
+  - content: |
+      ENVIRONMENT=${env_name}
+      APP_PORT=${app_port}
+      DEPLOYED_AT=$(date)
+    path: /etc/app_env
+    permissions: '0644'
+
+runcmd:
+  - echo "Configuring environment for ${env_name}..." >> /var/log/cloud-init-custom.log
+  - apt-get update && apt-get install -y nginx
+  - systemctl enable nginx && systemctl start nginx

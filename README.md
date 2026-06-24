@@ -8,9 +8,17 @@
 ![Gitleaks](https://img.shields.io/badge/Secrets-Protected-green?logo=git)
 
 ## 📌 Project Overview
-This repository is a dedicated laboratory for my transition into **DevSecOps Engineering**. It documents my practical journey from a **SOC Analyst** (completing Yandex Practicum in June 2026) to a Junior DevOps professional by September 2026. 
+This repository serves as my dedicated, hands-on laboratory documenting my rigorous transition into **DevSecOps Engineering**. It chronicles my professional path from a **SOC Analyst** to a highly capable DevSecOps professional.
 
-The core mission is to build security tools that aren't just functional, but **hardened**, **automated**, and **observable**.
+The core mission of this repository is to build, orchestrate, and secure modern cloud infrastructure, developing engineering tools that are not just functional, but **hardened**, **highly automated**, and **fully observable**.
+
+### Git Branching & Navigation Strategy
+To ensure a clean and production-ready documentation standard, this repository utilizes a structured branch workflow:
+
+* **`main` Branch:** Reserved exclusively for high-level documentation, architectural overviews, and overall lab indexing (README).
+* **`feature/enterprise-pipeline` Branch:** The core development environment. Switch to this branch to explore the complete codebase, active automated pipelines, configuration playbooks, and functional IaC templates.
+
+> 💡 **Quick Navigation:** To audit the full technical implementation and review the project source files, please checkout the **`feature/enterprise-pipeline`** branch.
 
 ## 🏗️ Lab Structure
 

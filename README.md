@@ -82,10 +82,10 @@ To ensure a clean and production-ready documentation standard, this repository u
 * **Tech:** Structural Terraform Modules, Input Variable Validation, Child Outputs.
 * **Key Achievement:** Developed production-ready custom network and compute modules with pre-packaged security baselines.
 
-#### 📦 Sub-lab 8: `08-terragrunt-architecture`
-* **Goal:** Manage multi-environment (Dev/Stage/Prod) infrastructure layouts without duplicating Terraform code.
-* **Tech:** Terragrunt, Remote State Inheritance, DRY Architectures.
-* **Key Achievement:** Orchestrated a multi-tier environment deployment using Terragrunt to keep root modules completely clean and isolate configuration parameters.
+#### 📦 `08-remote-state-environments`
+* **Goal:** Manage multi-environment (Dev/Prod) infrastructure layouts without duplicating Terraform code by leveraging state isolation.
+* **Tech Stack:** Terraform Workspaces, Yandex Object Storage (S3 Backend), Dynamic Mapping, State Locking.
+* **Key Achievement:** Orchestrated a multi-tier environment deployment using native Terraform Workspaces to keep core infrastructure modules completely immutable and clean. Decoupled environment logic from resource declarations by configuring dynamic profile routing maps inside variables.tf. This setup automatically spins up localized environment configurations (dynamic CPU, Memory, and subnet CIDRs) seamlessly on the fly based on the evaluated `terraform.workspace` runtime context.
 
 #### 📦 Sub-lab 9: `09-gitops-pipeline`
 * **Goal:** Fully automate infrastructure validation and execution through a secure CI/CD system.
@@ -197,6 +197,15 @@ To ensure a clean and production-ready documentation standard, this repository u
 * **Tech Stack:** Terraform, HashiCorp HCL, Built-in Functions (`templatefile`, `lookup`, `merge`), Cloud-Init, YAML.
 * **Key Achievement:** Developed a dynamic OS initialization pipeline by separating runtime configuration data from infrastructure logic. Leveraged the `lookup` and `merge` HCL functions to dynamically resolve environment-specific attributes (ports, system users) based on the target deployment tier (`dev`/`prod`). Engineered an automated metadata injection mechanism using the `templatefile` function to render parameterized Cloud-Init YAML blueprints on the fly, enabling hands-free user provisioning, SSH security hardening, and automated package deployments (Nginx) during the virtual machine's initial boot sequence.
 
+#### 📁 `07-custom-modules`
+* **Goal:** Deconstruct monolithic infrastructure code into decoupled, reusable, and enterprise-grade custom modules.
+* **Tech Stack:** Terraform Modules, HashiCorp HCL, Input Validation, Structural Outputs, DRY Architecture.
+* **Key Achievement:** Refactored the unified codebase into highly isolated, self-contained infrastructure blueprints by architecting dedicated local modules for Network (`vpc`) and Compute (`compute`) layers. Implemented strict programmatic coupling between independent modules by mapping structural outputs (such as dynamic network subnet IDs) directly into down-stream compute inputs. Hardened the infrastructure entrypoints against runtime configuration failure by engineering compile-time validation blocks (`validation`) with regex-based security filters to audit critical variables—such as public SSH key format standards—prior to cloud provider execution.
+
+#### 📁 `08-remote-state-refactoring`
+* **Goal:** Establish a multi-environment infrastructure deployment pipeline powered by isolated remote state tracking.
+* **Tech Stack:** Terraform Workspaces, Yandex Object Storage (S3 Backend), Dynamic Mapping, State Locking.
+* **Key Achievement:** Architected a highly scalable multi-tenant infrastructure topology by decoupling generic HCL resources from environment-specific configuration parameters. Leveraged Terraform Workspaces (`dev`/`prod`) to enforce strict state file separation within a shared remote Yandex Object Storage bucket, utilizing automated backend lockfiles to maintain state synchronization across execution environments. Engineered dynamic profile routing tables inside `variables.tf` that parse runtime resource capacities (CPU cores, memory allocations, subnet CIDRs) seamlessly on the fly using the logical `terraform.workspace` evaluator, allowing safe parallel tracking of independent environment tiers from a singular, immutable codebase.
 ---
 ## 🛡️ DevSecOps Pipeline (CI/CD)
 The project utilizes GitHub Actions to implement a "Stop-the-World" policy. A build only succeeds if it passes all 4 security gates:

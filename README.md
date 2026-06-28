@@ -212,6 +212,10 @@ To ensure a clean and production-ready documentation standard, this repository u
 * **Tech Stack:** GitHub Actions, Yandex IAM Automation, Bash Scripting, Automation Workflows, GitOps.
 * **Key Achievement:** Built a production-grade "Plan-on-PR" GitOps pipeline that completely eliminates manual engineering drift and local credential exposure. Configured automated lifecycle triggers that intercept Pull Requests to execute semantic dry-runs (`terraform plan`), injecting the structural infrastructure review ledger directly into PR comments via advanced GitHub Script orchestration for collaborative code-review. Engineered an automated continuous delivery execution phase that safely triggers auto-approved state deployments (`terraform apply`) only upon successful code integration into protected branches, externalizing critical cloud infrastructure privileges into encrypted GitHub Repository Secrets.
 
+#### 📁 `10-iac-security-gates`
+* **Goal:** Implement Shift-Left security controls to capture IaC misconfigurations and compliance violations before cloud deployment.
+* **Tech Stack:** TFLint, Trivy IaC Scanner, Static Application Security Testing (SAST), Automated Quality Gates.
+* **Key Achievement:** Enforced hard semantic security blocks within the automation pipeline that programmaticly reject infrastructure commits containing dangerous misconfigurations, such as unrestricted administrative access (`0.0.0.0/0` on port 22) or over-privileged IAM roles. Integrated a multi-stage linting and vulnerability assessment phase using TFLint and Aqua Security Trivy into the pre-initialization flow. By mapping the deployment job dependencies (`needs: security_gates`) directly to scanner exit codes, created a strict automated gate that halts the delivery lifecycle instantly upon detecting High or Critical configuration defects, embedding direct security visibility into the engineering feedback loop.
 
 ---
 ## 🛡️ DevSecOps Pipeline (CI/CD)

@@ -206,6 +206,13 @@ To ensure a clean and production-ready documentation standard, this repository u
 * **Goal:** Establish a multi-environment infrastructure deployment pipeline powered by isolated remote state tracking.
 * **Tech Stack:** Terraform Workspaces, Yandex Object Storage (S3 Backend), Dynamic Mapping, State Locking.
 * **Key Achievement:** Architected a highly scalable multi-tenant infrastructure topology by decoupling generic HCL resources from environment-specific configuration parameters. Leveraged Terraform Workspaces (`dev`/`prod`) to enforce strict state file separation within a shared remote Yandex Object Storage bucket, utilizing automated backend lockfiles to maintain state synchronization across execution environments. Engineered dynamic profile routing tables inside `variables.tf` that parse runtime resource capacities (CPU cores, memory allocations, subnet CIDRs) seamlessly on the fly using the logical `terraform.workspace` evaluator, allowing safe parallel tracking of independent environment tiers from a singular, immutable codebase.
+
+#### 📁 `09-gitops-pipeline`
+* **Goal:** Fully automate infrastructure validation and execution through a secure, event-driven CI/CD system.
+* **Tech Stack:** GitHub Actions, Yandex IAM Automation, Bash Scripting, Automation Workflows, GitOps.
+* **Key Achievement:** Built a production-grade "Plan-on-PR" GitOps pipeline that completely eliminates manual engineering drift and local credential exposure. Configured automated lifecycle triggers that intercept Pull Requests to execute semantic dry-runs (`terraform plan`), injecting the structural infrastructure review ledger directly into PR comments via advanced GitHub Script orchestration for collaborative code-review. Engineered an automated continuous delivery execution phase that safely triggers auto-approved state deployments (`terraform apply`) only upon successful code integration into protected branches, externalizing critical cloud infrastructure privileges into encrypted GitHub Repository Secrets.
+
+
 ---
 ## 🛡️ DevSecOps Pipeline (CI/CD)
 The project utilizes GitHub Actions to implement a "Stop-the-World" policy. A build only succeeds if it passes all 4 security gates:

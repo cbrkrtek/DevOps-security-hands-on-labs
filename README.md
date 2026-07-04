@@ -6,6 +6,7 @@
 ![Docker](https://img.shields.io/badge/Docker-Enabled-blue?logo=docker)
 ![Security](https://img.shields.io/badge/Security-Hardened-orange?logo=guardant)
 ![Gitleaks](https://img.shields.io/badge/Secrets-Protected-green?logo=git)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-Security-blue?logo=kubernetes)
 
 ## 📌 Project Overview
 This repository serves as my dedicated, hands-on laboratory documenting my rigorous transition into **DevSecOps Engineering**. It chronicles my professional path from a **SOC Analyst** to a highly capable DevSecOps professional.
@@ -25,7 +26,7 @@ To ensure a clean and production-ready documentation standard, this repository u
 ### [Lab 01: Container Security & Microservices](./01-ssl-scanner-service)
 **Goal:** Production-ready SSL/TLS Scanner with advanced container hardening.
 * **Tech:** Python 3.11, Docker (Multi-stage), Redis, **Gitleaks**, **Bandit**, **Hadolint**, **Trivy**.
-* **Key Achievement:** : Implemented a multi-layered security gate and network isolation for backend services.
+* **Key Achievement:** Implemented a multi-layered security gate and network isolation for backend services.
 
 ### [Lab 02: Linux Infrastructure Hardening](./02-infrastructure-hardening)
 **Goal:** Automated security baseline for Linux instances
@@ -82,7 +83,7 @@ To ensure a clean and production-ready documentation standard, this repository u
 * **Tech:** Structural Terraform Modules, Input Variable Validation, Child Outputs.
 * **Key Achievement:** Developed production-ready custom network and compute modules with pre-packaged security baselines.
 
-#### 📦 `08-remote-state-environments`
+#### 📦 Sub-lab 8: `08-remote-state-environments`
 * **Goal:** Manage multi-environment (Dev/Prod) infrastructure layouts without duplicating Terraform code by leveraging state isolation.
 * **Tech Stack:** Terraform Workspaces, Yandex Object Storage (S3 Backend), Dynamic Mapping, State Locking.
 * **Key Achievement:** Orchestrated a multi-tier environment deployment using native Terraform Workspaces to keep core infrastructure modules completely immutable and clean. Decoupled environment logic from resource declarations by configuring dynamic profile routing maps inside variables.tf. This setup automatically spins up localized environment configurations (dynamic CPU, Memory, and subnet CIDRs) seamlessly on the fly based on the evaluated `terraform.workspace` runtime context.
@@ -98,12 +99,41 @@ To ensure a clean and production-ready documentation standard, this repository u
 * **Key Achievement:** Enforced automated pipeline security blocks that reject changes containing open administration ports or broad privilege grants.
 
 ---
+
+### [Lab 06: Kubernetes Security & Cluster Hardening](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/tree/feature/enterprise-pipeline/06-kubernetes)
+**Goal:** Production-grade Kubernetes security — from workload isolation and RBAC least-privilege to Policy-as-Code enforcement and supply chain integrity.
+* **Tech:** kind, kubectl, Trivy, Kyverno, NetworkPolicy, RBAC, securityContext, Helm.
+* **Status:** 🔄 In Progress (July 2026)
+
+#### 📦 Sub-lab 1: `01-cluster-security-context` ✅
+* **Goal:** Establish workload-level security isolation through Pod Security Standards and RBAC least-privilege enforcement.
+* **Tech:** kind (3-node cluster), `securityContext`, Trivy config scanner, RBAC (`Role` / `ClusterRole` / `RoleBinding` / `ServiceAccount`).
+* **Key Achievement:** Reduced Trivy misconfiguration findings from **17 → 7 (LOW only)** by applying a full hardening stack: `runAsNonRoot`, `readOnlyRootFilesystem`, `allowPrivilegeEscalation: false`, `capabilities: drop ALL`, and `seccompProfile: RuntimeDefault`. Exposed a critical RBAC blind spot — a wildcard `ClusterRole` (`verbs: ["*"]`) invisible to standard `kubectl` inspection but flagged **2x CRITICAL** by Trivy, then resolved to **0 findings** after applying explicit least-privilege rules. Documented two real production-grade troubleshooting cases: nginx failing with `bind() Permission denied` on port 80 under non-root UID, and `readOnlyRootFilesystem` requiring explicit `emptyDir` volume mounts.
+
+#### 📦 Sub-lab 2: `02-netpol-kyverno`
+* **Goal:** Enforce network segmentation and Policy-as-Code admission controls at the cluster level.
+* **Tech:** NetworkPolicy, Kyverno, Helm, namespace isolation.
+* **Key Achievement:** *(In progress — Week 2)*
+
+#### 📦 Sub-lab 3: `03-supply-chain-cosign-trivy`
+* **Goal:** Secure the container supply chain from image build to cluster admission.
+* **Tech:** Trivy Operator, Cosign, Kyverno image verification policy.
+* **Key Achievement:** *(Planned — August)*
+
+#### 📦 Sub-lab 4: `04-gitops-argocd`
+* **Goal:** Automate secure delivery through a GitOps pipeline with embedded security gates.
+* **Tech:** ArgoCD, GitHub Actions, Trivy, Kyverno dry-run.
+* **Key Achievement:** *(Planned — August)*
+
+---
+
 ## 🛡️ Detailed Lab Logs
 
 ### 🐍 Lab 01: Container Security — Hardened Microservice Architecture
 **Focus:** Shift-Left Security & Infrastructure as Code.
 
 * **Secrets Detection (Gitleaks)** Integrated Gitleaks to prevent API tokens and SSH keys from ever entering the git history. Verified by bypassing and then hardening GitHub Push Protection.
+
 ### 1. Static Analysis (SAST) & Linting
 * **Bandit (Python SAST):**
     * **Purpose:** Automatically scans Python source code for common security issues (e.g., hardcoded passwords, insecure SSL/TLS versions).
@@ -120,7 +150,6 @@ To ensure a clean and production-ready documentation standard, this repository u
 * **Configuration Decoupling:**
     * Moved target data from environment variables to a dedicated `domains.txt` file.
     * The file is mounted via **Read-Only Volumes**, following the "Data vs Code" separation principle.
-
 
 ### 🐧 Lab 02: Infrastructure Hardening — "Minimal & Resilient"
 **Focus:** Reducing the attack surface of a fresh Linux installation.
@@ -167,6 +196,7 @@ To ensure a clean and production-ready documentation standard, this repository u
 └── 04-alb-security-groups/
 └── 05-advanced-hcl-loops/
 ```
+
 #### 📁 `01-single-public-instance`
 * **Goal:** Provision a baseline public compute instance in Yandex Cloud while enforcing strict IaC security standards.
 * **Tech Stack:** Terraform, HashiCorp HCL, Yandex Compute Cloud, Yandex VPC.
@@ -218,6 +248,51 @@ To ensure a clean and production-ready documentation standard, this repository u
 * **Key Achievement:** Enforced hard semantic security blocks within the automation pipeline that programmaticly reject infrastructure commits containing dangerous misconfigurations, such as unrestricted administrative access (`0.0.0.0/0` on port 22) or over-privileged IAM roles. Integrated a multi-stage linting and vulnerability assessment phase using TFLint and Aqua Security Trivy into the pre-initialization flow. By mapping the deployment job dependencies (`needs: security_gates`) directly to scanner exit codes, created a strict automated gate that halts the delivery lifecycle instantly upon detecting High or Critical configuration defects, embedding direct security visibility into the engineering feedback loop.
 
 ---
+
+### ☸️ Lab 06: Kubernetes Security — Hardened Cluster Architecture
+**Focus:** Workload Isolation, RBAC Least-Privilege, and Shift-Left Static Security Analysis.
+
+#### 🔒 Sub-lab 1: Cluster Hardening & Security Context
+
+* **Baseline vs. Hardened Workload:**
+    * Deployed `pod-insecure` (zero `securityContext`) — confirmed running as `uid=0(root)` via `kubectl exec`. Trivy flagged **17 misconfigurations** including missing `runAsNonRoot`, `readOnlyRootFilesystem`, and unrestricted Linux capabilities.
+    * Deployed `pod-secure` with full hardening stack: `runAsNonRoot: true` (UID 1000), `readOnlyRootFilesystem: true`, `allowPrivilegeEscalation: false`, `capabilities: drop ALL`, `seccompProfile: RuntimeDefault`. Trivy result: **7 LOW only** (resource limits — acceptable in lab scope).
+
+* **RBAC Least-Privilege:**
+    * Designed two `ServiceAccount` profiles with scoped permissions and audited each via `kubectl auth can-i --as=system:serviceaccount:...`:
+        * `dev-readonly` — `get/list/watch` on pods, services, deployments. Verified: `create deployments` → **no**, `delete namespaces` → **no**.
+        * `ops-deployer` — `create/update` on deployments only. Verified: `create deployments` → **yes**, `delete namespaces` → **no**.
+
+* **Critical Finding — Wildcard RBAC Detection & Fix:**
+    * Applied intentional `ClusterRole` with `verbs: ["*"]` — full cluster access equivalent to `cluster-admin`. Standard `kubectl get clusterrole` showed no warnings whatsoever.
+    * Trivy static scan immediately flagged **2x CRITICAL** (KSV-0044): *"Role permits wildcard verb on wildcard resource."*
+    * **Fix:** Replaced wildcards with explicit `verbs` and scoped `resources`. Re-scan confirmed **0 findings**.
+    * **Conclusion:** `kubectl` is blind to dangerous RBAC patterns. Trivy manifest scanning must be a mandatory pre-apply CI gate.
+
+* **Troubleshooting Documented ("What I Broke"):**
+    * **Issue 1 — Port binding under non-root UID:** Standard `nginx:1.25` with `runAsUser: 1000` fails with `bind() to 0.0.0.0:80 failed (13: Permission denied)`. Linux restricts ports below 1024 to root. **Fix:** switched to `nginxinc/nginx-unprivileged:1.25` which binds on port 8080 — the production-recommended approach for K8s.
+    * **Issue 2 — Read-only filesystem breaks nginx:** `readOnlyRootFilesystem: true` caused `can not modify /etc/nginx/conf.d/default.conf`. **Fix:** mounted `emptyDir` volumes at `/tmp`, `/var/cache/nginx`, and `/var/run`.
+
+**Evidence:**
+
+![pod-insecure running as uid=0 root](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/feature/enterprise-pipeline/06-kubernetes/01-cluster-security-context/screenshots/insecure_pod_deployment-1.PNG)
+
+![nginx bind permission denied on port 80 with runAsUser 1000](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/feature/enterprise-pipeline/06-kubernetes/01-cluster-security-context/screenshots/02-pod-secure-nginx-bind-permission-denied-port80.PNG)
+
+![Trivy scan pod-insecure 17 misconfigurations](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/feature/enterprise-pipeline/06-kubernetes/01-cluster-security-context/screenshots/03-trivy-scan-pod-insecure-17-misconfigs.PNG)
+
+![Trivy scan pod-secure 7 LOW only](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/feature/enterprise-pipeline/06-kubernetes/01-cluster-security-context/screenshots/04-trivy-scan-pod-secure-7-low-only.PNG)
+
+![RBAC ops-deployer create yes delete namespace no](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/feature/enterprise-pipeline/06-kubernetes/01-cluster-security-context/screenshots/05-rbac-ops-deployer-create-yes-delete-no.PNG)
+
+![RBAC dev-readonly create no delete namespace no](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/feature/enterprise-pipeline/06-kubernetes/01-cluster-security-context/screenshots/06-rbac-dev-readonly-create-no-delete-no.PNG)
+
+![Trivy RBAC wildcard BAD 2 CRITICAL findings](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/feature/enterprise-pipeline/06-kubernetes/01-cluster-security-context/screenshots/07-trivy-rbac-wildcard-bad-2-critical.PNG)
+
+![Trivy RBAC wildcard fixed 0 findings](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/feature/enterprise-pipeline/06-kubernetes/01-cluster-security-context/screenshots/08-trivy-rbac-wildcard-fixed-0-findings.PNG)
+
+---
+
 ## 🛡️ DevSecOps Pipeline (CI/CD)
 The project utilizes GitHub Actions to implement a "Stop-the-World" policy. A build only succeeds if it passes all 4 security gates:
 1. **Linting** (Hadolint)
@@ -226,7 +301,7 @@ The project utilizes GitHub Actions to implement a "Stop-the-World" policy. A bu
 4. **SCA** (Trivy)
 
 ### Pipeline Security Gate Example (YAML):
-```
+```yaml
 - name: Run Gitleaks
   uses: gitleaks/gitleaks-action@v2
   env:
@@ -237,94 +312,65 @@ The project utilizes GitHub Actions to implement a "Stop-the-World" policy. A bu
 ```
 
 ## 🛠️ System Architecture & Security Controls
-| Layer    | Component           | Security Control                                      |
-|----------|---------------------|-------------------------------------------------------|
-| Compute  | Python 3.11 Scanner | Runtime isolation, Non-root (UID 1000), Resource Limits|
-| Storage  | Redis (Stateful)    | Internal Bridge Network, Auth (Password), No public ports|
-| Data     | domains.txt         | Configuration Decoupling, Read-Only Volume             |
-| Pipeline | GitHub Actions      | Automated SAST/SCA/Secret Detection                   |
+| Layer        | Component           | Security Control                                       |
+|--------------|---------------------|--------------------------------------------------------|
+| Compute      | Python 3.11 Scanner | Runtime isolation, Non-root (UID 1000), Resource Limits|
+| Storage      | Redis (Stateful)    | Internal Bridge Network, Auth (Password), No public ports|
+| Data         | domains.txt         | Configuration Decoupling, Read-Only Volume             |
+| Pipeline     | GitHub Actions      | Automated SAST/SCA/Secret Detection                    |
+| K8s Workload | securityContext     | runAsNonRoot, readOnlyRootFilesystem, drop ALL caps    |
+| K8s Access   | RBAC                | Least-privilege ServiceAccounts, Trivy RBAC scanning   |
 
 ## 🚀 Quick Start
 
 ### 🧪 Lab 01: Deploying the SSL Scanner
-To run the containerized scanner with Redis, follow these steps:
-
-1. **Prepare Environment:**
-Create a local folder for the project and navigate into it.
-```
-mkdir test_folder && cd test_folder
-```
-Then clone the repository and move to the service directory.
-```
-git clone [https://github.com/cbrkrtek/DevOps-security-hands-on-labs.git]
-cd DevOps-security-hands-on-labs/01-ssl-scanner-service/
-```
-**Configure secrets:** create a `.env` file to store your database password (this file is ignored by Git for security).
 ```bash
+mkdir test_folder && cd test_folder
+git clone https://github.com/cbrkrtek/DevOps-security-hands-on-labs.git
+cd DevOps-security-hands-on-labs/01-ssl-scanner-service/
 echo "REDIS_PASSWORD=YOUR_PASSWORD" > .env
-```
-**Launch:**
-Start the hardened infrastructure in detached mode.
-```
 docker-compose up --build -d
-```
-**Monitor:**
-Verify the scanner is working and communicating with the isolated Redis.
-```
 docker-compose logs -f app-scanner
 ```
 
 ### 🐧 Lab 02: Hardening a Linux Server
-To secure a fresh Ubuntu/Debian instance using the automated security baseline:
-**Clone the Tools:**
-```
-git clone [https://github.com/cbrkrtek/DevOps-security-hands-on-labs.git]
+```bash
+git clone https://github.com/cbrkrtek/DevOps-security-hands-on-labs.git
 cd DevOps-security-hands-on-labs/02-infrastructure-hardening/
-```
-**Execute Hardering:**
-Make the script executable and run it with sudo privileges.
-
-```
-chmod +x setup.sh
-sudo ./setup.sh
+chmod +x setup.sh && sudo ./setup.sh
 ```
 
 ### 📊 Lab 03: Deploying Local Observability Stack
-This lab contains a dual-layer setup: an **Ansible Playbook** for target configuration and a **Docker Compose Stack** for local visualization.
-1. **Move to the project folder:**
-   ```bash
-   cd DevOps-security-hands-on-labs/03-observability-management/
-   ```
-2. **The Ansible Playbook Layer:**
-   The `monitoring.yml` playbook is stored in the repository to automate Node Exporter provisioning on the managed webservers group.
+```bash
+cd DevOps-security-hands-on-labs/03-observability-management/
+docker compose up -d
+# Prometheus: http://localhost:9090
+# Grafana: http://localhost:3000 (admin/admin) → import dashboard.json
+```
 
-3. **Launch the Docker Containers:**
-   Start the pre-configured Prometheus and Grafana stack on your host machine:
-   ```bash
-   docker compose up -d
-   ```
-4. **Access UI & Import Dashboard:**
-* **Prometheus:** `http://localhost:9090` (Verify target `192.168.0.112:9100` is UP)
-* **Grafana:** `http://localhost:3000` (Credentials: `admin` / `admin`)
-* Import `dashboard.json` via Grafana UI to view live charts.
+### ☸️ Lab 06: Deploying the Kubernetes Security Lab
+```bash
+cd DevOps-security-hands-on-labs/06-kubernetes/01-cluster-security-context/
+kind create cluster --config kind-config.yaml --name k8s-lab
+kubectl apply -f manifests/pod-insecure.yaml
+kubectl apply -f manifests/pod-secure.yaml
+trivy config manifests/pod-insecure.yaml
+trivy config manifests/pod-secure.yaml
+kubectl apply -f manifests/rbac-dev-readonly.yaml
+kubectl apply -f manifests/rbac-ops-deployer.yaml
+trivy config manifests/rbac-wildcard-BAD.yaml
+```
+
 ## 🚀 2026 Roadmap (September Readiness)
 
-As per my Technical Learning Plan, the journey continues toward full-stack DevSecOps proficiency:
+* 📅 **[June — Completed ✅]** Advanced Infrastructure as Code & Cloud Hardening (Yandex Cloud):
+    * S3 Remote Backend with State Locking, advanced HCL, Zero Trust VPC networking, GitOps pipeline with Plan-on-PR, IaC Security Gates via Trivy and TFLint.
 
-* 📅 [June] Advanced Infrastructure as Code & Cloud Hardening (Yandex Cloud):
-    * **State & Code Architecture:** Transitioning from local state files to an enterprise-grade cloud architecture using secure **S3 Remote Backend** with active **State Locking** via YDB.
-    * **Advanced HCL & Terragrunt:** Mastering dry, dynamic configurations using HCL expressions (`for_each`, `dynamic blocks`), built-in functions, and orchestrating multi-environment setups (Dev/Stage/Prod) using **Terragrunt**.
-    * **Zero Trust Cloud Networking:** Designing isolated VPC architectures with private subnets, explicit egress routing via **Yandex VPC Gateways (NAT)**, and strict L3/L4 traffic filtering.
-    * **GitOps & IaC Security Gates:** Automating infrastructure changes through a secure GitHub Actions pipeline using **Plan-on-PR workflows** and enforcing pre-flight security scans via **Trivy IaC** and **TFLint**.
+* 📅 **[July — In Progress 🔄]** Container Orchestration & Kubernetes Security:
+    * Cluster hardening with securityContext and Pod Security Standards, RBAC least-privilege, Network Policies, Policy-as-Code with Kyverno, Supply Chain Security with Cosign and Trivy Operator.
 
-* 📅 [July] Container Orchestration & Kubernetes Security (EKS):
-    * Managed K8s: Deploying and hardening Amazon EKS clusters.
-    * Network Policies: Implementing pod-to-pod isolation and EKS security best practices.
-    * Policy as Code: Enforcing security standards with Kyverno or OPA/Gatekeeper.
-
-* 📅 [August] Runtime Security & Observability:
-    * Threat Detection: Monitoring system calls and anomalous behavior with Falco.
-    * Cloud SIEM: Centralizing logs and security events using AWS CloudWatch and OpenSearch/Grafana.
+* 📅 **[August — Planned]** Multi-Cloud & GitOps at Scale:
+    * Oracle Cloud Infrastructure (OCI) with OKE managed Kubernetes via Terraform, ArgoCD GitOps pipeline, advanced supply chain integrity with Cosign.
 
 ---
 

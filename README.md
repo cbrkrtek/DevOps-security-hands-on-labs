@@ -129,7 +129,7 @@ To ensure a clean and production-ready documentation standard, this repository u
 
 ## 🛡️ Detailed Lab Logs
 
-### 🐍 Lab 01: Container Security — Hardened Microservice Architecture
+## 🐍 Lab 01: Container Security — Hardened Microservice Architecture
 **Focus:** Shift-Left Security & Infrastructure as Code.
 
 * **Secrets Detection (Gitleaks)** Integrated Gitleaks to prevent API tokens and SSH keys from ever entering the git history. Verified by bypassing and then hardening GitHub Push Protection.
@@ -151,7 +151,7 @@ To ensure a clean and production-ready documentation standard, this repository u
     * Moved target data from environment variables to a dedicated `domains.txt` file.
     * The file is mounted via **Read-Only Volumes**, following the "Data vs Code" separation principle.
 
-### 🐧 Lab 02: Infrastructure Hardening — "Minimal & Resilient"
+## 🐧 Lab 02: Infrastructure Hardening — "Minimal & Resilient"
 **Focus:** Reducing the attack surface of a fresh Linux installation.
 
 * **Environment Resilience:** The script was refactored to work on minimal server installations (even where `nano` or `sudo` might be missing).
@@ -159,7 +159,7 @@ To ensure a clean and production-ready documentation standard, this repository u
 * **Active Defense:** Deployment of **Fail2Ban** to automatically jail IP addresses exhibiting malicious behavior.
 * **Non-Interactive Updates:** Optimized for automated deployment using `DEBIAN_FRONTEND=noninteractive`
 
-### 📊 Lab 03: Infrastructure Observability — Hybrid & Automated Monitoring (check in branch feature/enterprise-pipeline)
+## 📊 Lab 03: Infrastructure Observability — Hybrid & Automated Monitoring (check in branch feature/enterprise-pipeline)
 **Focus:** Infrastructure Visibility, Telemetry, and Infrastructure as Code (IaC).
 
 * **Ansible Automation (Target Prep):**
@@ -169,7 +169,7 @@ To ensure a clean and production-ready documentation standard, this repository u
 * **Grafana Dashboard-as-Code:**
     * Designed a comprehensive local security dashboard to track CPU, Memory, and Network traffic in real-time. Created a static `dashboard.json` blueprint following GitOps principles for instant, reproducible visualization.
 
-### 🕵️‍♂️ Lab 04: Security Observability — Log Aggregation & Infrastructure Telemetry (check in branch feature/enterprise-pipeline)
+## 🕵️‍♂️ Lab 04: Security Observability — Log Aggregation & Infrastructure Telemetry (check in branch feature/enterprise-pipeline)
 **Focus:** Log-as-Code, Single-Binary Storage Optimization, and Security Telemetry Visualization.
 
 * **Single-Binary Loki Optimization:**
@@ -185,7 +185,7 @@ To ensure a clean and production-ready documentation standard, this repository u
 
 ![Result of the 4-th week](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/Monitoring%20logs%20and%20resources.PNG)
 
-### ☁️ Weeks 05-08: Terraform Deep Dive & Production Patterns (Yandex Cloud)
+## ☁️ Lab 05: Terraform Deep Dive & Production Patterns (Yandex Cloud)
 **Objective:** Advanced mastery of Terraform internal mechanics, HCL power-features, state lifecycle management, and secure cloud infrastructure provisioning using Zero Trust network design.
 
 ```text
@@ -195,6 +195,11 @@ To ensure a clean and production-ready documentation standard, this repository u
 └── 03-s3-backend-locking/
 └── 04-alb-security-groups/
 └── 05-advanced-hcl-loops/
+└── 06-hcl-functions-templates/
+└── 07-custom-modules/
+└── 08-remote-state-refactoring/
+└── 09-gitops-pipeline/
+└── 10-iac-security-gates/
 ```
 
 #### 📁 `01-single-public-instance`
@@ -249,10 +254,10 @@ To ensure a clean and production-ready documentation standard, this repository u
 
 ---
 
-### ☸️ Lab 06: Kubernetes Security — Hardened Cluster Architecture
+## ☸️ Lab 06: Kubernetes Security — Hardened Cluster Architecture
 **Focus:** Workload Isolation, RBAC Least-Privilege, and Shift-Left Static Security Analysis.
 
-#### 🔒 Sub-lab 1: Cluster Hardening & Security Context
+### 🛡️ Lab 06-1: Cluster Hardening & Security Context
 
 * **Baseline vs. Hardened Workload:**
     * Deployed `pod-insecure` (zero `securityContext`) — confirmed running as `uid=0(root)` via `kubectl exec`. Trivy flagged **17 misconfigurations** including missing `runAsNonRoot`, `readOnlyRootFilesystem`, and unrestricted Linux capabilities.
@@ -291,8 +296,263 @@ To ensure a clean and production-ready documentation standard, this repository u
 
 ![Trivy RBAC wildcard fixed 0 findings](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/feature/enterprise-pipeline/06-kubernetes/01-cluster-security-context/screenshots/08-trivy-rbac-wildcard-fixed-0-findings.PNG)
 
----
+### 🛡️ Lab 06-2: Cluster Hardening & Security Context
 
+#### 📌 Goal
+Implement a multi-layered, Zero Trust security architecture inside a Kubernetes cluster using two complementary tools: **NetworkPolicy** for network-level traffic isolation and **Kyverno** for admission-level Policy-as-Code enforcement. Validate each layer through real attack simulations and document all security findings.
+
+#### 🛠️ Tech Stack
+
+| Component | Tool | Purpose |
+|-----------|------|---------|
+| Cluster | kind (3-node) | Local multi-node K8s environment |
+| Network isolation | Kubernetes NetworkPolicy | Namespace and pod-level traffic control |
+| Policy engine | Kyverno (Helm) | Admission webhook — Policy-as-Code |
+| Static analysis | Trivy config scanner | Manifest misconfiguration detection |
+| Attack simulation | nicolaka/netshoot | DNS recon, curl, wget, nmap |
+
+#### 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Kubernetes Cluster                    │
+│                                                         │
+│  ┌─────────────┐    ✅ allowed     ┌──────────────┐    │
+│  │  frontend   │ ─────────────────▶│   backend    │    │
+│  │  namespace  │                   │  namespace   │    │
+│  └─────────────┘                   └──────┬───────┘    │
+│         │                                 │            │
+│         │ ❌ blocked                      │ ✅ allowed  │
+│         │ (NetworkPolicy)                 ▼            │
+│         │                          ┌──────────────┐    │
+│         └────────────────────────▶ │   database   │    │
+│                  ❌ blocked         │  namespace   │    │
+│                                    └──────────────┘    │
+│                                                         │
+│  🛡️ Kyverno Admission Webhook — intercepts ALL pods     │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Design principle:** deny-all first, then explicitly allow only required traffic paths. Every pod must pass 7 Kyverno policies before being admitted to the cluster.
+
+#### 📁 Structure
+
+```
+02-netpol-kyverno/
+├── manifests/
+│   ├── netpol-deny-all-database.yaml
+│   ├── netpol-allow-backend-to-database.yaml
+│   └── netpol-frontend-isolation.yaml
+├── kyverno-policies/
+   ├── fixed-policy-no-latest.yaml
+   ├── policy-require-nonroot.yaml
+   ├── policy-no-privileged.yaml
+   ├── policy-require-resource-limits.yaml
+   ├── policy-disallow-host-namespaces.yaml
+   ├── policy-require-readonly-rootfs.yaml
+   └── policy-disallow-nodeport.yaml
+```
+
+#### 🔒 NetworkPolicy Implementation
+### Strategy: Deny-All First
+ 
+All traffic to the `database` namespace is denied by default. DNS egress (UDP/TCP 53) is explicitly permitted — without it, kube-dns resolution breaks entirely.
+ 
+```yaml
+# netpol-deny-all-database.yaml
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+  egress:
+  - ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
+```
+Traffic is then selectively re-opened only for `backend → database`:
+
+```yaml
+# netpol-allow-backend-to-database.yaml
+ingress:
+- from:
+  - namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: backend
+```
+Frontend egress is restricted to `backend` and `kube-system` (DNS only):
+
+```yaml
+# netpol-frontend-isolation.yaml
+egress:
+- to:
+  - namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: backend
+- to:
+  - namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: kube-system
+  ports:
+  - port: 53
+    protocol: UDP
+  - port: 53
+    protocol: TCP
+```
+### Post-Hardening Connectivity Matrix
+ 
+| Source | Destination | Port | Result | Evidence |
+|--------|-------------|------|--------|---------|
+| frontend-pod | backend-pod | 80 | ✅ 200 OK | screenshot 03 |
+| frontend-pod | db-pod | 80 | ❌ timeout | screenshot 04 |
+| frontend-pod | 8.8.8.8 (internet) | 80 | ❌ timeout | screenshot 04 |
+| backend-pod | db-pod | 80 | ✅ 200 OK | screenshot 03 |
+| db-pod | backend-pod | 80 | ❌ timeout | screenshot 03 |
+| unlabeled-pod (backend ns) | db-pod | 80 | ❌ blocked by Kyverno | screenshot 06 |
+| any pod | kube-dns | 53 | ✅ allowed | screenshot 05 |
+ 
+### 🛡️ Kyverno Policy Suite — 7 Policies
+
+All 7 policies run in `Enforce` mode with `background: true` for continuous compliance scanning.
+
+```
+kubectl get ClusterPolicy 
+```
+| # | Policy Name | Severity | Blocks |
+|---|-------------|----------|--------|
+| 1 | `disallow-latest-tag` | HIGH | `:latest`, no tag, `:LATEST` (case-insensitive) |
+| 2 | `require-non-root` | HIGH | Missing `runAsNonRoot: true` |
+| 3 | `disallow-privileged` | CRITICAL | `privileged: true` on any container |
+| 4 | `require-resource-limits` | MEDIUM | Missing CPU or memory limits |
+| 5 | `disallow-host-namespaces` | CRITICAL | `hostPID`, `hostIPC`, `hostNetwork` |
+| 6 | `require-readonly-rootfs` | MEDIUM | Writable root filesystem |
+| 7 | `disallow-nodeport` | MEDIUM | NodePort service exposure |
+ 
+#### Trivy Static Analysis — All Manifests
+```bash
+trivy config manifests/ --format table
+```
+**Result: 8 manifests scanned → 0 misconfigurations across all files.**
+
+## 🔍 Security Testing Results
+
+### Policy Test Matrix
+
+| Test | Image / Config | Policies Triggered | Result |
+|------|---------------|-------------------|--------|
+| test1 | `nginx:latest` | disallow-latest-tag + require-non-root | ❌ BLOCKED |
+| test2 | `nginx:1.25` (no securityContext) | require-non-root | ❌ BLOCKED |
+| test3-compliant | `nginx:1.25` + `runAsNonRoot: true` | — | ✅ CREATED |
+| bad-pod-1 | `nginx:latest` | disallow-latest-tag | ❌ BLOCKED |
+| bad-pod-2 | `nginx` (no tag) | disallow-latest-tag | ❌ BLOCKED (after fix) |
+| bad-pod-3 | `nginx:LATEST` | disallow-latest-tag | ❌ BLOCKED (after fix) |
+| limit-none | `nginx:1.25` (no limits) | require-resource-limits | ❌ BLOCKED |
+| test-writable | `nginx:1.25` (no readOnly) | require-readonly-rootfs | ❌ BLOCKED |
+| bypass-netpol-pod | `nginx:1.25` + `hostNetwork: true` | disallow-host-namespaces + require-resource-limits | ❌ BLOCKED |
+| forbidden-nodeport-svc | Service type: NodePort | disallow-nodeport | ❌ BLOCKED |
+| **fully-compliant-final** | All controls applied | — | ✅ **CREATED** |
+
+### 💥 What I Found and Fixed
+
+#### Finding 1: DNS Topology Leak via Deny-All
+ 
+**What happened:** After applying `deny-all` NetworkPolicy to the `database` namespace, direct TCP connections were blocked. However, DNS resolution still worked — an attacker with access to any pod could resolve `db-service.database.svc.cluster.local` and obtain the real IP address of the database service.
+ 
+**Demonstrated:** From `attacker-pod` (default namespace):
+- `nslookup db-service.database.svc.cluster.local` → returned `10.96.28.34` ✅ (IP leaked)
+- `wget http://db-service.database.svc.cluster.local:80` → `download timed out` ✅ (access blocked)
+**Status:** DNS leak is an inherent K8s behavior — kube-dns operates cluster-wide. The egress rule in `deny-all` explicitly permits port 53 because removing it breaks all pod functionality. The key mitigation is that network access is blocked even when IP is known. True DNS isolation requires NetworkPolicy scoped to kube-dns IP + CoreDNS RBAC hardening — documented as known limitation.
+ 
+#### Finding 2: hostNetwork Bypasses NetworkPolicy Entirely
+
+**What happened:** Attempted to deploy `bypass-netpol-pod` with `hostNetwork: true`. A pod with this flag shares the host node's network stack — all NetworkPolicy rules become completely ineffective against it.
+ 
+**Mitigation:** `disallow-host-namespaces` Kyverno policy blocks this at admission — before the pod is even scheduled. This is the **only** layer of protection against hostNetwork bypass.
+ 
+**Key insight:** NetworkPolicy and Kyverno are not redundant — they protect at different layers. Kyverno must be present to close attack vectors that NetworkPolicy cannot address.
+
+#### Finding 3: Kyverno Blocked the AND vs OR Test Pod
+
+**What happened:** Attempted to create `unlabeled-attacker` pod in `backend` namespace to test whether unlabeled pods could reach `database`. The pod was immediately blocked by `require-resource-limits` before NetworkPolicy was even evaluated.
+ 
+**Status:** This demonstrated an indirect security benefit — Kyverno enforced resource limits prevented the test pod from being created without proper configuration, adding an additional barrier to lateral movement attempts.
+
+#### Finding 4: Three Bypass Vectors in the Initial latest-tag Policy
+
+**What happened:** The first version of `disallow-latest-tag` used `image: "!*:latest"` pattern. Tested three bypass vectors — all succeeded against the initial policy.
+ 
+**Fix:** `fixed-policy-no-latest.yaml` uses `foreach` with JMESPath functions: `contains(element.image, ':')` to catch untagged images, and `ends_with(to_lower(element.image), ':latest')` to catch all case variants.
+
+### 🚀 Quickstart
+ 
+```bash
+# Apply NetworkPolicies
+kubectl apply -f manifests/
+ 
+# Install Kyverno via Helm
+helm repo add kyverno https://kyverno.github.io/kyverno/
+helm repo update
+helm install kyverno kyverno/kyverno -n kyverno --create-namespace
+ 
+# Apply all 7 Kyverno policies
+kubectl apply -f kyverno-policies/
+ 
+# Verify all policies are Ready
+kubectl get clusterpolicy
+ 
+# Deploy compliant pod (passes all 7 policies)
+kubectl apply -f test-fully-compliant.yaml
+```
+
+## 📸 Evidence
+
+### NetworkPolicy — Connectivity Verification
+
+**Screenshot 01** - After policies: frontend→database = timeout, backend→database = 200 OK (side by side) ![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/02-post-netpol-frontend-timeout.PNG)
+
+**Screenshot 02** - Verification of Frontend Egress restrictions: frontend→backend exit code 7, frontend→database timeout, frontend→internet timeout ![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/03-post-netpol-3-tests-frontend-egress.PNG)
+
+**Screenshot 03** - backend→database 200 OK, backend→frontend blocked ![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/04-backend-curl-db-200-and-frontend-blocked.PNG)
+
+**Screenshot 04** - DNS leak via Deny-All: nslookup reveals db IP (10.96.28.34), but wget times out ![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/05-dns-leak-via-deny-all.PNG)
+
+### DNS & Attack Simulation
+
+**Screenshot 05** - unlabeled-pod reaches CoreDNS and gets kubernetes.default IP, direct TCP blocked ![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/06-unlabeled-pod-coredns-and-blocked.PNG)
+
+### Kyverno — Policy Testing
+
+**Screenshot 06** - TEST 1: latest + root → blocked by 2 policies. TEST 2: valid tag, root → blocked by require-non-root ![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/07-kyverno-test1-test2-blocked.PNG)
+
+**Screenshot 07** - TEST 3: nginx:1.25 + runAsNonRoot: true, runAsUser: 1000 → ALLOWED![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/08-kyverno-test3-compliant-created.PNG)
+
+**Screenshot 08** - bad-pod-1 (nginx:latest) blocked, bad-pod-2 (nginx) CREATED — bypass found ![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/10-kyverno-latest-bypass-after-fix.PNG)
+
+
+**Screenshot 9** - BYPASS FIXED: lAtEsT blocked, nginx (no tag) blocked, nginx:1.25 allowed ![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/09-kyverno-latest-bypass-before-fix.PNG)
+
+**Screenshot 10** - limit-none: Missing limits enable DoS via resource exhaustion → blocked ![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/11-kyverno-limit-none-blocked.PNG)
+
+**Screenshot 11** - bypass-netpol-pod (hostNetwork: true): blocked by disallow-host-namespaces + require-resource-limits
+![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/12-kyverno-bypass-netpol-pod-blocked.PNG)
+
+**Screenshot 12** - forbidden-nodeport-svc: NodePort services are not allowed. Use ClusterIP → blocked ![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/13-kyverno-nodeport-blocked.PNG)
+
+**Screenshot 13** - test-writable: Root filesystem must be read-only → blocked ![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/14-kyverno-readonly-rootfs-blocked.PNG)
+
+### Trivy Static Analysis
+
+**Screenshot 14** - trivy config manifests/ — 8 files scanned: fixed-policy-no-latest, netpol-*, policy-* → all 0 misconfigurations ![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/16-trivy-scan-8-manifests-0-findings.PNG)
+
+**Screenshot 15** - trivy config (kyverno-policies folder) — policy-no-latest, policy-no-privileged, policy-require-nonroot → all 0 ![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/17-trivy-scan-3-kyverno-policies-0-findings.PNG)
+
+### Final State
+
+**Screenshot 16** - All 7 ClusterPolicies: ADMISSION=true, BACKGROUND=true, READY=True ![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/18-kubectl-get-clusterpolicy-7-ready.PNG)
+
+**Screenshot 17** - pod/fully-compliant-final created — passes all 7 Kyverno policies simultaneously ![](https://github.com/cbrkrtek/DevOps-security-hands-on-labs/blob/main/Pictures%20for%20README/19-fully-compliant-final-created.PNG)
+
+---
 ## 🛡️ DevSecOps Pipeline (CI/CD)
 The project utilizes GitHub Actions to implement a "Stop-the-World" policy. A build only succeeds if it passes all 4 security gates:
 1. **Linting** (Hadolint)

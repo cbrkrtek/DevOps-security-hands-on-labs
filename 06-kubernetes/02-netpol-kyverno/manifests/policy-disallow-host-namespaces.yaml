@@ -1,0 +1,30 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-host-namespaces
+  annotations:
+    policies.kyverno.io/severity: critical
+    policies.kyverno.io/description: >-
+      hostPID allows a container to see all processes on the host node.
+      hostIPC allows inter-process communication with host processes.
+      hostNetwork bypasses pod network isolation and NetworkPolicy entirely —
+      all NetworkPolicy rules become ineffective against pods with hostNetwork: true.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+  - name: host-namespaces
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    validate:
+      message: >-
+        hostPID, hostIPC, and hostNetwork are not allowed.
+        WARNING: hostNetwork completely bypasses NetworkPolicy isolation.
+      pattern:
+        spec:
+          =(hostPID): "false"
+          =(hostIPC): "false"
+          =(hostNetwork): "false"

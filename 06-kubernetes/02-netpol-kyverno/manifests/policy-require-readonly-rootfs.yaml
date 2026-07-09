@@ -1,0 +1,30 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-readonly-rootfs
+  annotations:
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      A writable root filesystem allows an attacker to write malicious binaries,
+      modify configuration files, or install tools at runtime.
+      readOnlyRootFilesystem: true prevents this class of attacks entirely.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+  - name: readonly-rootfs
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    validate:
+      message: "Root filesystem must be read-only. Set securityContext.readOnlyRootFilesystem: true on every container."
+      foreach:
+      - list: "request.object.spec.containers"
+        deny:
+          conditions:
+            any:
+            - key: "{{ element.securityContext.readOnlyRootFilesystem || false }}"
+              operator: Equals
+              value: false

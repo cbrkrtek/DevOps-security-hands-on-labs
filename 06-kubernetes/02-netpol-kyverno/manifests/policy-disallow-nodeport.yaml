@@ -1,0 +1,25 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-nodeport
+  annotations:
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      NodePort services expose cluster workloads on every node's external IP.
+      This bypasses ingress controls and exposes services directly to the network.
+      Use ClusterIP for internal services.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+  - name: no-nodeport
+    match:
+      any:
+      - resources:
+          kinds:
+          - Service
+    validate:
+      message: "NodePort services are not allowed. Use ClusterIP for internal services."
+      pattern:
+        spec:
+          =(type): "!NodePort"

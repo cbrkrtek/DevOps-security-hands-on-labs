@@ -1,0 +1,32 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-resource-limits
+  annotations:
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/description: >-
+      Without CPU and memory limits a single pod can exhaust node resources.
+      This is a DoS vector even without external attackers.
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+  - name: require-limits
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    validate:
+      message: "CPU and memory limits are required on all containers. Missing limits enable DoS via resource exhaustion."
+      foreach:
+      - list: "request.object.spec.containers"
+        deny:
+          conditions:
+            any:
+            - key: "{{ element.resources.limits.cpu || '' }}"
+              operator: Equals
+              value: ""
+            - key: "{{ element.resources.limits.memory || '' }}"
+              operator: Equals
+              value: ""

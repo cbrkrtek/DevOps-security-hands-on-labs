@@ -9,7 +9,7 @@
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-Security-blue?logo=kubernetes)
 
 ## 📌 Project Overview
-This repository serves as my dedicated, hands-on laboratory documenting my rigorous transition into **DevSecOps Engineering**. It chronicles my professional path from a **SOC Analyst** to a highly capable DevSecOps professional.
+This repository serves as my dedicated, hands-on laboratory documenting my rigorous transition into **DevSecOps Engineering**. It chronicles my professional path from a [SOC Analyst](https://github.com/cbrkrtek/SOC-analyst-hands-on-labs) to a highly capable DevSecOps professional.
 
 The core mission of this repository is to build, orchestrate, and secure modern cloud infrastructure, developing engineering tools that are not just functional, but **hardened**, **highly automated**, and **fully observable**.
 

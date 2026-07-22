@@ -20,6 +20,28 @@ To ensure a clean and production-ready documentation standard, this repository u
 * **`feature/enterprise-pipeline` Branch:** The core development environment. Switch to this branch to explore the complete codebase, active automated pipelines, configuration playbooks, and functional IaC templates.
 
 > 💡 **Quick Navigation:** To audit the full technical implementation and review the project source files, please checkout the **`feature/enterprise-pipeline`** branch.
+>
+
+### Repository Structure: An intentional pivot
+
+Labs 01–06 in this repository share a single codebase, cluster, and CI/CD 
+pipeline by design — the goal was to build a cohesive, evolving DevSecOps 
+platform where each lab builds on the infrastructure of the last.
+
+Starting with supply chain security, I've moved to **standalone repositories 
+per project**. The reason: supply chain security, secrets management, and 
+similar deep-dive topics deserve to stand on their own — a complete, 
+self-contained case with its own architecture, findings, and README, rather 
+than a subfolder competing for attention inside a larger monolith. It also 
+lets each project demonstrate an end-to-end build from `git init` to 
+production-grade tooling, without inheriting assumptions from prior labs.
+
+This repository remains the home for infrastructure hardening, IaC, and 
+foundational Kubernetes security work. Deep-dive, standalone projects live 
+here:
+
+* 🔐 **[Supply Chain Security Lab](https://github.com/cbrkrtek/supply-chain-security-lab)** — Cosign/Sigstore keyless signing, SBOM, Kyverno admission control, ArgoCD GitOps, Trivy Operator runtime scanning.
+* 🔑 **[HashiCorp Vault Secrets Management Lab](https://github.com/cbrkrtek/vault-secrets-management-lab)** — Kubernetes auth, dynamic secrets, OIDC-based CI authentication, Kyverno policies against raw Kubernetes Secrets. *(in progress)*
 
 ## 🏗️ Lab Structure
 
